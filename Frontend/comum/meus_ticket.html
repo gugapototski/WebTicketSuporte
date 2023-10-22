@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Meus Tickets</title>
+    <h1>Meus Tickets</h1>
+    <p>Nome do Usuário: <span id="nomeUsuario"></span></p>
+    <p>Tipo do Usuário: <span id="tipoUsuario"></span></p>
+
+    <button class="btn btn-primary" onclick="criarTicket()">
+      Criar Ticket
+    </button>
+    <button class="btn btn-primary" onclick="verTicketsAbertos()">
+      Meus tickets
+    </button>
+    <button class="btn btn-primary" onclick="deslogar()">Deslogar</button>
+    <br />
+    <br />
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tickets</h1>
+    <div id="tickets-table"></div>
+
+    <script>
+      const token = localStorage.getItem("token");
+      const id_user = localStorage.getItem("id_user");
+      const nomeUsuario = localStorage.getItem("nomeUsuario");
+      const tipoUsuario = localStorage.getItem("tipoUsuario");
+
+      if (!token) {
+        // Se não houver token, redirecionar para a página de login
+        console.log("Redirecionando para a página de login...");
+        window.location.href = "login.html";
+      } else {
+        // Exibir informações do usuário
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+        document.getElementById("tipoUsuario").textContent = tipoUsuario;
+      }
+      if (tipoUsuario !== "Comum") {
+        deslogar();
+      }
+      function criarTicket() {
+        // Redirecionar o usuário para a página de criação de tickets
+        window.location.href = "criar_ticket.html";
+      }
+
+      function verTicketsAbertos() {
+        // Redirecionar o usuário para a página de tickets abertos
+        window.location.href = "meus_ticket.html";
+      }
+      function deslogar() {
+        // Limpar o token do localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("nomeUsuario");
+        localStorage.removeItem("tipoUsuario");
+
+        // Redirecionar o usuário para a página de login
+        window.location.href = "../login.html";
+      }
+      // Obtenha o ID do usuário salvo no navegador
+      const userId = localStorage.getItem("id_user");
+
+      // Construa a URL da rota com o ID do usuário
+      const url = `http://localhost:3000/ticket/teste/findById/${userId}`;
+
+      // Realize uma requisição GET para a rota
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          const ticketsTable = document.getElementById("tickets-table");
+          if (data.length > 0) {
+            const table = document.createElement("table");
+            table.innerHTML = `
+                        <tr>
+                            <th>ID do Ticket</th>
+                            <th>Título</th>
+                            <th>Descrição</th>
+                            <th>Situação do Ticket</th>
+                        </tr>
+                    `;
+
+            data.forEach((ticket) => {
+              const row = table.insertRow();
+              row.insertCell(0).textContent = ticket.id_ticket;
+              row.insertCell(1).textContent = ticket.titulo_ticket;
+              row.insertCell(2).textContent = ticket.descricao_ticket;
+              row.insertCell(3).textContent = ticket.situacao_ticket;
+            });
+
+            ticketsTable.appendChild(table);
+          } else {
+            ticketsTable.textContent = "Nenhum ticket encontrado.";
+          }
+        })
+        .catch((error) => {
+          console.error("Erro ao obter tickets: ", error);
+        });
+    </script>
+  </body>
+</html>

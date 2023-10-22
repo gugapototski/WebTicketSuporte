@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Criar Ticket</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <h1>Criar Ticket</h1>
+    <p>Nome do Usuário: <span id="nomeUsuario"></span></p>
+    <p>Tipo do Usuário: <span id="tipoUsuario"></span></p>
+
+    <button class="btn btn-primary" onclick="criarTicket()">
+      Criar Ticket
+    </button>
+    <button class="btn btn-primary" onclick="verTicketsAbertos()">
+      Meus tickets
+    </button>
+    <button class="btn btn-primary" onclick="deslogar()">Deslogar</button>
+    <br />
+    <br />
+
+    <form id="ticket-form">
+      <label for="titulo">Título:</label>
+      <input
+        type="text"
+        class="form-control"
+        id="titulo"
+        name="titulo"
+        required
+      />
+      <br />
+      <label for="descricao">Descrição:</label>
+      <textarea
+        id="descricao"
+        class="form-control"
+        name="descricao"
+        rows="4"
+        required
+      ></textarea>
+      <br />
+      <label for="categoria">Categoria:</label>
+      <select id="categoria" class="form-control" name="categoria" required>
+        <option value="" disabled selected>
+          Selecione a categoria do seu problema
+        </option>
+        <!-- Opções de categoria serão preenchidas dinamicamente com JavaScript -->
+      </select>
+      <br />
+      <button type="submit">Salvar</button>
+    </form>
+
+    <p id="mensagem"></p>
+
+    <script>
+      const token = localStorage.getItem("token");
+      const id_user = localStorage.getItem("id_user");
+      const nomeUsuario = localStorage.getItem("nomeUsuario");
+      const tipoUsuario = localStorage.getItem("tipoUsuario");
+
+      if (!token) {
+        // Se não houver token, redirecionar para a página de login
+        console.log("Redirecionando para a página de login...");
+        window.location.href = "login.html";
+      } else {
+        // Exibir informações do usuário
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+        document.getElementById("tipoUsuario").textContent = tipoUsuario;
+      }
+      if (tipoUsuario !== "Comum") {
+        deslogar();
+      }
+      function criarTicket() {
+        // Redirecionar o usuário para a página de criação de tickets
+        window.location.href = "criar_ticket.html";
+      }
+
+      function verTicketsAbertos() {
+        // Redirecionar o usuário para a página de tickets abertos
+        window.location.href = "meus_ticket.html";
+      }
+      function deslogar() {
+        // Limpar o token do localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("nomeUsuario");
+        localStorage.removeItem("tipoUsuario");
+
+        // Redirecionar o usuário para a página de login
+        window.location.href = "../login.html";
+      }
+      // Preencher o campo de categoria com opções obtidas da rota allCateg
+      async function preencherCategorias() {
+        const categoriaSelect = document.getElementById("categoria");
+        categoriaSelect.innerHTML = "";
+
+        // Adicione a opção padrão
+        const optionDefault = document.createElement("option");
+        optionDefault.value = "";
+        optionDefault.disabled = true;
+        optionDefault.selected = true;
+        optionDefault.text = "Selecione a categoria do seu problema";
+        categoriaSelect.appendChild(optionDefault);
+
+        // Realizar uma requisição para obter a lista de categorias
+        const response = await fetch(
+          "http://localhost:3000/categoria/allCateg"
+        );
+        const data = await response.json();
+
+        // Preencher o campo de seleção com as categorias obtidas
+        data.forEach((categoria) => {
+          const option = document.createElement("option");
+          option.value = categoria.id_categ;
+          option.text = categoria.categoria;
+          categoriaSelect.appendChild(option);
+        });
+      }
+
+      preencherCategorias();
+
+      document
+        .getElementById("ticket-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const titulo = document.getElementById("titulo").value;
+          const descricao = document.getElementById("descricao").value;
+          const categoriaId = document.getElementById("categoria").value;
+
+          // Crie o objeto de ticket com os dados necessários, incluindo a categoria
+          const ticket = {
+            id_user_comum: parseInt(localStorage.getItem("id_user"), 10), // Converter para número inteiro
+            titulo_ticket: titulo,
+            descricao_ticket: descricao,
+            situacao_ticket: "Aberto",
+            categ_ticket: parseInt(categoriaId, 10), // Converter para número inteiro
+          };
+
+          try {
+            const response = await fetch(
+              "http://localhost:3000/ticket/newTicket",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(ticket),
+              }
+            );
+
+            document.getElementById("ticket-form").reset();
+
+            if (response.ok) {
+              const mensagem = "Ticket criado com sucesso!";
+              document.getElementById("mensagem").innerText = mensagem;
+            } else {
+              const errorData = await response.json();
+              const mensagemErro =
+                errorData.message || "Erro ao criar o ticket.";
+              document.getElementById("mensagem").innerText = mensagemErro;
+            }
+          } catch (error) {
+            console.error("Erro ao enviar o ticket:", error);
+          }
+        });
+    </script>
+  </body>
+</html>

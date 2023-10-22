@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Meus Tickets</title>
+    <h1>Meus Tickets</h1>
+    <p>Nome do Usuário: <span id="nomeUsuario"></span></p>
+    <p>Tipo do Usuário: <span id="tipoUsuario"></span></p>
+
+    <button class="btn btn-primary" onclick="Atendendo()">Atendendo</button>
+    <button class="btn btn-primary" onclick="verTicketsConcluidos()">
+      Ver Tickets Concluídos
+    </button>
+    <button class="btn btn-primary" onclick="verTodosMeusTickets()">
+      Ver Todos os Tickets
+    </button>
+    <button class="btn btn-primary" onclick="deslogar()">Deslogar</button>
+    <br />
+    <br />
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="tickets-table"></div>
+
+    <script>
+      const token = localStorage.getItem("token");
+      const id_user = localStorage.getItem("id_user");
+      const nomeUsuario = localStorage.getItem("nomeUsuario");
+      const tipoUsuario = localStorage.getItem("tipoUsuario");
+
+      if (!token) {
+        // Se não houver token, redirecionar para a página de login
+        console.log("Redirecionando para a página de login...");
+        window.location.href = "login.html";
+      } else {
+        // Exibir informações do usuário
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+        document.getElementById("tipoUsuario").textContent = tipoUsuario;
+      }
+      if (tipoUsuario !== "Tecnico") {
+        deslogar();
+      }
+      function Atendendo() {
+        // Redirecionar o técnico para a página de tickets em atendimento
+        window.location.href = "Atendendo.html";
+      }
+
+      function verTicketsConcluidos() {
+        // Redirecionar o técnico para a página de tickets concluídos
+        window.location.href = "tickets_concluidos.html";
+      }
+
+      function verTodosMeusTickets() {
+        // Redirecionar o técnico para a página de seus próprios tickets
+        window.location.href = "all_ticket.html";
+      }
+
+      function deslogar() {
+        // Limpar o token do localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("nomeUsuario");
+        localStorage.removeItem("tipoUsuario");
+
+        // Redirecionar o usuário para a página de login
+        window.location.href = "login.html";
+      }
+
+      // Construa a URL da rota com o ID do usuário
+      const url = `http://localhost:3000/ticket/teste/findByIdTec/${id_user}`;
+
+      // Realize uma requisição GET para a rota
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          const ticketsTable = document.getElementById("tickets-table");
+          if (data.length > 0) {
+            const table = document.createElement("table");
+            table.innerHTML = `
+              <tr>
+                <th>ID do Ticket</th>
+                <th>Título</th>
+                <th>Descrição</th>
+                <th>Situação do Ticket</th>
+                <th>Concluir Ticket</th>
+              </tr>
+            `;
+
+            data.forEach((ticket) => {
+              const row = table.insertRow();
+              row.insertCell(0).textContent = ticket.id_ticket;
+              row.insertCell(1).textContent = ticket.titulo_ticket;
+              row.insertCell(2).textContent = ticket.descricao_ticket;
+              row.insertCell(3).textContent = ticket.situacao_ticket;
+
+              // Adicione um botão "Concluir Ticket" para cada item
+              const concluirButton = document.createElement("button");
+              concluirButton.textContent = "Concluir Ticket";
+              concluirButton.addEventListener("click", () => {
+                concluirTicket(ticket.id_ticket);
+              });
+              row.insertCell(4).appendChild(concluirButton);
+            });
+
+            ticketsTable.appendChild(table);
+          } else {
+            ticketsTable.textContent = "Nenhum ticket encontrado.";
+          }
+        })
+        .catch((error) => {
+          console.error("Erro ao obter tickets: ", error);
+        });
+
+      function concluirTicket(id_ticket) {
+        // Chame a rota para concluir o ticket
+        const concluirUrl = `http://localhost:3000/ticket/Concluir/${id_ticket}`;
+        fetch(concluirUrl, { method: "PUT" })
+          .then((response) => response.json())
+          .then((result) => {
+            alert("Ticket concluído com sucesso!");
+          })
+          .catch((error) => {
+            console.error("Erro ao concluir o ticket: ", error);
+          });
+      }
+    </script>
+  </body>
+</html>

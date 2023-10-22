@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Ticket em andamento</title>
+    <h1>Ticket em andamento</h1>
+    <p>Nome do Usuário: <span id="nomeUsuario"></span></p>
+    <p>Tipo do Usuário: <span id="tipoUsuario"></span></p>
+
+    <button class="btn btn-primary" onclick="cadastrarTecnico()">
+      Cadastrar Técnico
+    </button>
+    <button class="btn btn-primary" onclick="cadastrarCategoria()">
+      Cadastrar Categoria
+    </button>
+    <button class="btn btn-primary" onclick="ticketsSemTecnico()">
+      Tickets Sem Técnico
+    </button>
+    <button class="btn btn-primary" onclick="ticketsEmAndamento()">
+      Tickets em Andamento
+    </button>
+    <button class="btn btn-primary" onclick="Alltickets()">
+      Todos os tickets
+    </button>
+    <button class="btn btn-primary" onclick="deslogar()">Deslogar</button>
+    <br />
+    <br />
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tickets</h1>
+    <div id="tickets-table"></div>
+
+    <script>
+      const token = localStorage.getItem("token");
+      const id_user = localStorage.getItem("id_user");
+      const nomeUsuario = localStorage.getItem("nomeUsuario");
+      const tipoUsuario = localStorage.getItem("tipoUsuario");
+
+      if (!token) {
+        // Se não houver token, redirecionar para a página de login
+        console.log("Redirecionando para a página de login...");
+        window.location.href = "../login.html";
+      } else {
+        // Exibir informações do usuário
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+        document.getElementById("tipoUsuario").textContent = tipoUsuario;
+      }
+      if (tipoUsuario !== "Adm") {
+        deslogar();
+      }
+
+      function deslogar() {
+        // Limpar o token do localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("nomeUsuario");
+        localStorage.removeItem("tipoUsuario");
+
+        // Redirecionar o usuário para a página de login
+        window.location.href = "../login.html";
+      }
+      function cadastrarTecnico() {
+        // Redirecionar o administrador para a página de cadastro de técnico
+        window.location.href = "cadastrar_tecnico.html";
+      }
+
+      function cadastrarCategoria() {
+        // Redirecionar o administrador para a página de cadastro de categoria
+        window.location.href = "cadastrar_categoria.html";
+      }
+
+      function ticketsSemTecnico() {
+        // Redirecionar o administrador para a página de tickets sem técnico
+        window.location.href = "tickets_sem_tecnico.html";
+      }
+
+      function ticketsEmAndamento() {
+        // Redirecionar o administrador para a página de tickets em andamento
+        window.location.href = "tickets_em_andamento.html";
+      }
+      function Alltickets() {
+        // Redirecionar o administrador para a página de tickets em andamento
+        window.location.href = "all_ticket.html";
+      }
+
+      // Construa a URL da rota com o ID do usuário
+      const url = `http://localhost:3000/ticket/Andamento`;
+
+      // Realize uma requisição GET para a rota
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          const ticketsTable = document.getElementById("tickets-table");
+          if (data.length > 0) {
+            const table = document.createElement("table");
+            table.innerHTML = `
+              <tr>
+                <th>ID do Ticket</th>
+                <th>Título</th>
+                <th>Descrição</th>
+                <th>Situação do Ticket</th>
+                <th>ID do Técnico</th>
+              </tr>
+            `;
+
+            data.forEach((ticket) => {
+              const row = table.insertRow();
+              row.insertCell(0).textContent = ticket.id_ticket;
+              row.insertCell(1).textContent = ticket.titulo_ticket;
+              row.insertCell(2).textContent = ticket.descricao_ticket;
+              row.insertCell(3).textContent = ticket.situacao_ticket;
+              const idUserTec = ticket.id_user_tec;
+              const idUserTecCell = row.insertCell(4);
+
+              if (idUserTec === null) {
+                idUserTecCell.textContent = "Não tem técnico atendendo";
+              } else {
+                // Se houver um técnico, faça uma solicitação para obter o nome do técnico
+                fetch(`http://localhost:3000/user/findById/${idUserTec}`)
+                  .then((response) => response.json())
+                  .then((userData) => {
+                    idUserTecCell.textContent = userData.nome_user;
+                  })
+                  .catch((error) => {
+                    console.error(
+                      "Erro ao obter informações do técnico: ",
+                      error
+                    );
+                  });
+              }
+            });
+
+            ticketsTable.appendChild(table);
+          } else {
+            ticketsTable.textContent = "Nenhum ticket encontrado.";
+          }
+        })
+        .catch((error) => {
+          console.error("Erro ao obter tickets: ", error);
+        });
+    </script>
+  </body>
+</html>

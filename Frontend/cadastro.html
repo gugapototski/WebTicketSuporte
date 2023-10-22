@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <title>Cadastro de Usuário</title>
+  </head>
+  <body>
+    <h1>Cadastro de Usuário</h1>
+
+    <form id="cadastro-form">
+      <div class="mb-3">
+        <label for="nome" class="form-label">Nome</label>
+        <input
+          type="text"
+          class="form-control"
+          id="nome"
+          name="nome"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="senha" class="form-label">Senha</label>
+        <input
+          type="password"
+          class="form-control"
+          id="senha"
+          name="senha"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="confirmar-senha" class="form-label">Confirmar Senha</label>
+        <input
+          type="password"
+          class="form-control"
+          id="confirmar-senha"
+          name="confirmar-senha"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-primary">Cadastrar</button>
+      <div class="mb-3">
+        <a
+          href="login.html"
+          class="btn btn-secondary"
+          style="text-decoration: none; color: white"
+          >Já tem um cadastro? Vá para a página de login aqui</a
+        >
+      </div>
+    </form>
+
+    <p id="resultado"></p>
+    <script>
+      const form = document.getElementById("cadastro-form");
+      const resultado = document.getElementById("resultado");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const nome = form.elements.nome.value;
+        const email = form.elements.email.value;
+        const senha = form.elements.senha.value;
+        const confirmarSenha = form.elements["confirmar-senha"].value;
+
+        // Verificar se as senhas coincidem
+        if (senha !== confirmarSenha) {
+          resultado.textContent =
+            "As senhas não coincidem. Por favor, tente novamente.";
+          return;
+        }
+
+        // Realizar uma requisição POST para a rota de cadastro
+        fetch("http://localhost:3000/user/cadastro", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome_user: nome,
+            email_user: email,
+            senha_user: senha,
+            confirmar_senha_user: confirmarSenha,
+            tipo_user: "Comum", // Sempre "Comum"
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Se o cadastro foi concluído com sucesso, redirecione para a tela de login
+              window.location.href = "login.html";
+            } else {
+              resultado.textContent = data.message;
+            }
+          })
+          .catch((error) => {
+            console.error("Erro no cadastro: ", error);
+          });
+      });
+    </script>
+  </body>
+</html>

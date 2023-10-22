@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ticket sem tecnico</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <h1>Ticket sem tecnico</h1>
+    <p>Nome do Usuário: <span id="nomeUsuario"></span></p>
+    <p>Tipo do Usuário: <span id="tipoUsuario"></span></p>
+    <button class="btn btn-primary" onclick="cadastrarTecnico()">
+      Cadastrar Técnico
+    </button>
+    <button class="btn btn-primary" onclick="cadastrarCategoria()">
+      Cadastrar Categoria
+    </button>
+    <button class="btn btn-primary" onclick="ticketsSemTecnico()">
+      Tickets Sem Técnico
+    </button>
+    <button class="btn btn-primary" onclick="ticketsEmAndamento()">
+      Tickets em Andamento
+    </button>
+    <button class="btn btn-primary" onclick="Alltickets()">
+      Todos os tickets
+    </button>
+    <button class="btn btn-primary" onclick="deslogar()">Deslogar</button>
+    <br />
+    <br />
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tickets</h1>
+    <div id="tickets-table"></div>
+    <script>
+      const token = localStorage.getItem("token");
+      const id_user = localStorage.getItem("id_user");
+      const nomeUsuario = localStorage.getItem("nomeUsuario");
+      const tipoUsuario = localStorage.getItem("tipoUsuario");
+
+      if (!token) {
+        // Se não houver token, redirecionar para a página de login
+        console.log("Redirecionando para a página de login...");
+        window.location.href = "login.html";
+      } else {
+        // Exibir informações do usuário
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+        document.getElementById("tipoUsuario").textContent = tipoUsuario;
+      }
+      if (tipoUsuario !== "Adm") {
+        deslogar();
+      }
+
+      function deslogar() {
+        // Limpar o token do localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("nomeUsuario");
+        localStorage.removeItem("tipoUsuario");
+
+        // Redirecionar o usuário para a página de login
+        window.location.href = "../login.html";
+      }
+
+      function cadastrarTecnico() {
+        // Redirecionar o administrador para a página de cadastro de técnico
+        window.location.href = "cadastrar_tecnico.html";
+      }
+
+      function cadastrarCategoria() {
+        // Redirecionar o administrador para a página de cadastro de categoria
+        window.location.href = "cadastrar_categoria.html";
+      }
+
+      function ticketsSemTecnico() {
+        // Redirecionar o administrador para a página de tickets sem técnico
+        window.location.href = "tickets_sem_tecnico.html";
+      }
+
+      function ticketsEmAndamento() {
+        // Redirecionar o administrador para a página de tickets em andamento
+        window.location.href = "tickets_em_andamento.html";
+      }
+      function Alltickets() {
+        // Redirecionar o administrador para a página de tickets em andamento
+        window.location.href = "all_ticket.html";
+      }
+
+      // Função para preencher a lista de técnicos
+      function fillTecnicosList(ticketId) {
+        fetch("http://localhost:3000/user/findByTec")
+          .then((response) => response.json())
+          .then((tecnicos) => {
+            const tecnicosList = document.createElement("select");
+            tecnicosList.id = `tecnicos-list-${ticketId}`;
+            tecnicosList.innerHTML = `
+              <option value="" disabled selected>Selecione um técnico</option>
+            `;
+
+            tecnicos.forEach((tecnico) => {
+              const option = document.createElement("option");
+              option.value = tecnico.id_user;
+              option.textContent = tecnico.nome_user;
+              tecnicosList.appendChild(option);
+            });
+
+            // Encontre a linha da tabela correspondente e adicione a lista suspensa
+            const row = document.getElementById(`row-${ticketId}`);
+            const cell = row.insertCell(6);
+            cell.appendChild(tecnicosList);
+          });
+      }
+
+      // Construa a URL da rota com o ID do usuário
+      const url = `http://localhost:3000/ticket/TicketLivre`;
+
+      // Realize uma requisição GET para a rota
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          const ticketsTable = document.getElementById("tickets-table");
+          if (data.length > 0) {
+            const table = document.createElement("table");
+            table.innerHTML = `
+              <tr>
+                  <th>ID do Ticket</th>
+                  <th>Título</th>
+                  <th>Descrição</th>
+                  <th>Categoria</th>
+                  <th>Situação do Ticket</th>
+                  <th>Atribuir Técnico</th>
+              </tr>
+            `;
+
+            data.forEach((ticket) => {
+              const row = table.insertRow();
+              row.id = `row-${ticket.id_ticket}`;
+              row.insertCell(0).textContent = ticket.id_ticket;
+              row.insertCell(1).textContent = ticket.titulo_ticket;
+              row.insertCell(2).textContent = ticket.descricao_ticket;
+              row.insertCell(3).textContent = ticket.categ_ticket;
+              row.insertCell(4).textContent = ticket.situacao_ticket;
+
+              // Adicione um botão para atribuir o técnico ao ticket
+              const assignButton = document.createElement("button");
+              assignButton.textContent = "Atribuir Técnico";
+              assignButton.addEventListener("click", function () {
+                const selectedTecnicoId = document.getElementById(
+                  `tecnicos-list-${ticket.id_ticket}`
+                ).value;
+                if (selectedTecnicoId) {
+                  const assignUrl = `http://localhost:3000/ticket/AddTec/${ticket.id_ticket}/${selectedTecnicoId}`;
+                  fetch(assignUrl, { method: "PUT" })
+                    .then((response) => response.json())
+                    .then((result) => {
+                      alert("Técnico atribuído com sucesso!");
+                    })
+                    .catch((error) => {
+                      console.error("Erro ao atribuir técnico: ", error);
+                    });
+                } else {
+                  alert("Selecione um técnico antes de atribuir.");
+                }
+              });
+
+              // Preencha a lista de técnicos para esta linha
+              fillTecnicosList(ticket.id_ticket);
+
+              // Adicione a lista suspensa na mesma linha
+              row.insertCell(5).appendChild(assignButton);
+            });
+
+            ticketsTable.appendChild(table);
+          } else {
+            ticketsTable.textContent = "Nenhum ticket encontrado.";
+          }
+        })
+        .catch((error) => {
+          console.error("Erro ao obter tickets: ", error);
+        });
+    </script>
+  </body>
+</html>

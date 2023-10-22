@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mover Técnico</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <h1>Mover Técnico</h1>
+    <p>Nome do Usuário: <span id="nomeUsuario"></span></p>
+    <p>Tipo do Usuário: <span id="tipoUsuario"></span></p>
+
+    <button class="btn btn-primary" onclick="cadastrarTecnico()">
+      Cadastrar Técnico
+    </button>
+    <button class="btn btn-primary" onclick="cadastrarCategoria()">
+      Cadastrar Categoria
+    </button>
+    <button class="btn btn-primary" onclick="ticketsSemTecnico()">
+      Tickets Sem Técnico
+    </button>
+    <button class="btn btn-primary" onclick="ticketsEmAndamento()">
+      Tickets em Andamento
+    </button>
+    <button class="btn btn-primary" onclick="Alltickets()">
+      Todos os tickets
+    </button>
+    <button class="btn btn-primary" onclick="deslogar()">Deslogar</button>
+    <p>Seu ID de Administrador: <span id="idAdm"></span></p>
+    <label for="idTecnico">ID do Técnico:</label>
+    <input type="text" id="idTecnico" placeholder="Digite o ID do Técnico" />
+    <button onclick="moverTecnico()">Mover Técnico</button>
+
+    <script>
+      const token = localStorage.getItem("token");
+      const nomeUsuario = localStorage.getItem("nomeUsuario");
+      const tipoUsuario = localStorage.getItem("tipoUsuario");
+
+      if (!token) {
+        // Se não houver token, redirecionar para a página de login
+        console.log("Redirecionando para a página de login...");
+        window.location.href = "../login.html";
+      } else {
+        // Exibir informações do usuário
+        document.getElementById("nomeUsuario").textContent = nomeUsuario;
+        document.getElementById("tipoUsuario").textContent = tipoUsuario;
+      }
+      if (tipoUsuario !== "Adm") {
+        deslogar();
+      }
+
+      function cadastrarTecnico() {
+        // Redirecionar o administrador para a página de cadastro de técnico
+        window.location.href = "cadastrar_tecnico.html";
+      }
+
+      function cadastrarCategoria() {
+        // Redirecionar o administrador para a página de cadastro de categoria
+        window.location.href = "cadastrar_categoria.html";
+      }
+
+      function ticketsSemTecnico() {
+        // Redirecionar o administrador para a página de tickets sem técnico
+        window.location.href = "tickets_sem_tecnico.html";
+      }
+
+      function ticketsEmAndamento() {
+        // Redirecionar o administrador para a página de tickets em andamento
+        window.location.href = "tickets_em_andamento.html";
+      }
+      function Alltickets() {
+        // Redirecionar o administrador para a página de tickets em andamento
+        window.location.href = "all_ticket.html";
+      }
+
+      function deslogar() {
+        // Limpar o token do localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("nomeUsuario");
+        localStorage.removeItem("tipoUsuario");
+
+        // Redirecionar o usuário para a página de login
+        window.location.href = "../login.html";
+      }
+      // Recupere o ID de Administrador do localStorage
+      const idAdm = localStorage.getItem("id_user");
+      if (!idAdm) {
+        // Se o ID de Administrador não estiver disponível, redirecione para a página de login
+        console.log(
+          "ID de Administrador não encontrado. Redirecionando para a página de login..."
+        );
+        window.location.href = "login.html";
+      } else {
+        document.getElementById("idAdm").textContent = idAdm;
+      }
+
+      function moverTecnico() {
+        // Recupere o ID do Técnico inserido pelo usuário
+        const idTecnico = document.getElementById("idTecnico").value;
+
+        // Verifique se um ID de Técnico válido foi inserido
+        if (idTecnico && !isNaN(idTecnico)) {
+          // Construa a URL para a rota de movimentação de técnico
+          const url = `http://localhost:3000/user/move-up/${idAdm}/${idTecnico}`;
+
+          // Realize uma requisição para a rota usando o método adequado (por exemplo, POST ou PUT)
+          fetch(url, { method: "POST" })
+            .then((response) => response.json())
+            .then((result) => {
+              alert("Técnico movido com sucesso!");
+            })
+            .catch((error) => {
+              console.error("Erro ao mover técnico: ", error);
+            });
+        } else {
+          alert("Por favor, insira um ID de Técnico válido.");
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id_user         Int     @id @default(autoincrement())
+  nome_user       String?
+  email_user      String  @unique
+  senha_user      String  
+  confirmar_senha_user    String
+  tipo_user       String
+  categoria       Categoria[]
+  comum_tickets Ticket[] @relation("comum_tickets")
+  tec_tickets Ticket[] @relation("tec_tickets")
+
+  @@map("users")
+}
+
+model Ticket {
+  id_ticket         Int      @id @default(autoincrement())
+  id_user_comum     Int
+  id_user_tec       Int?
+  titulo_ticket     String
+  descricao_ticket  String
+  situacao_ticket   String
+  categ_ticket      Int
+  categoria          Categoria @relation(fields: [categ_ticket], references: [id_categ])
+  user_comum         User      @relation("comum_tickets", fields: [id_user_comum], references: [id_user])
+  user_tec           User?     @relation("tec_tickets", fields: [id_user_tec], references: [id_user])
+
+  @@map("ticket")
+}
+
+
+
+model Categoria{
+  id_categ    Int @id @default(autoincrement())
+  id_user_adm   Int
+  categoria     String
+  user          User  @relation(fields: [id_user_adm], references: [id_user])
+  ticket        Ticket[]
+
+  @@map("categoria")
+}
