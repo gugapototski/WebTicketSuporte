@@ -14,4 +14,8 @@ export class CategoriaController {
     const categ = await this.CategoriaService.findAll();
     return categ;
   }
+  @Get('findByIdCateg/:id_categ')
+  async UserById(@Param('id_categ') id_categ: string) {
+    return this.CategoriaService.findById(parseInt(id_categ));
+  }
 }
